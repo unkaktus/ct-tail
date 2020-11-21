@@ -1,0 +1,13 @@
+version: "3.8"
+services:
+  ct-tail:
+    build:
+      context: .
+    entrypoint: ["/ct-tail", "-web-port", "80"]
+    restart: always
+    networks:
+      - web
+networks:
+  web:
+    external:
+      name: web
