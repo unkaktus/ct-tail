@@ -40,7 +40,10 @@ func run() error {
 
 	go func() {
 		for {
-			if atomic.LoadUint64(activeListeners) != 0 {
+			switch atomic.LoadUint64(activeListeners) {
+			case 0:
+				tailer = cttail.NewTailer(*u, *bygone)
+			default:
 				log.Printf("%v active listeners, fetching", atomic.LoadUint64(activeListeners))
 				newEntries, err := tailer.FetchTip()
 				if err != nil {
