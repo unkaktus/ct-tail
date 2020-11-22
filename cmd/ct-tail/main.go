@@ -13,8 +13,9 @@ import (
 	cttail "github.com/nogoegst/ct-tail"
 )
 
+// Catch the ones being issued by LE, thus expiring in 3 months
 func currentOak() string {
-	year := time.Now().Year()
+	year := time.Now().AddDate(0, 3, 0).Year()
 	return fmt.Sprintf("https://oak.ct.letsencrypt.org/%d/", year)
 }
 
