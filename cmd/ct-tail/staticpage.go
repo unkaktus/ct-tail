@@ -3,6 +3,21 @@ package main
 var staticPage = `<html>
 <head>
 	<script>
+        var secondsSinceLastActivity = 0;
+        var maxInactivity = 5;
+        setInterval(function(){
+            secondsSinceLastActivity++;
+        }, 1000);
+        function activity(){
+            secondsSinceLastActivity = 0;
+        }
+        var activityEvents = [
+            'mousedown', 'mousemove', 'keydown',
+            'scroll', 'touchstart'
+        ];
+        activityEvents.forEach(function(eventName) {
+            document.addEventListener(eventName, activity, true);
+        });
         function printLine(line) {
             if (line == "") {
                 return
@@ -16,7 +31,9 @@ var staticPage = `<html>
             lineElem.append(line);
             elem.append(lineElem);
 
-            lineElem.scrollIntoView()
+            if(secondsSinceLastActivity > maxInactivity) {
+                lineElem.scrollIntoView({behavior: "smooth"})
+            }
         }
 
         function showEntry(entry) {
