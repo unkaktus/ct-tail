@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/gorilla/websocket"
 	cttail "github.com/nogoegst/ct-tail"
 )
 
@@ -64,6 +65,7 @@ func run() error {
 
 	switch {
 	case *webPort != "":
+		var upgrader = websocket.Upgrader{}
 		h := http.NewServeMux()
 		h.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -90,6 +92,32 @@ func run() error {
 				}
 				if len(entries.Entries) != 0 {
 					flusher.Flush()
+				}
+				time.Sleep(*interval)
+			}
+		}))
+		h.Handle("/log/ws", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			c, err := upgrader.Upgrade(w, r, nil)
+			if err != nil {
+				log.Print("upgrade:", err)
+				return
+			}
+			defer c.Close()
+
+			atomic.AddUint64(activeListeners, 1)
+			defer atomic.AddUint64(activeListeners, ^uint64(0))
+
+			for {
+				entries.RLock()
+				es := entries.Entries
+				entries.RUnlock()
+				for _, entry := range es {
+					jsonEntry, _ := json.Marshal(entry)
+					err = c.WriteMessage(websocket.TextMessage, []byte(jsonEntry))
+					if err != nil {
+						log.Println("write:", err)
+						break
+					}
 				}
 				time.Sleep(*interval)
 			}

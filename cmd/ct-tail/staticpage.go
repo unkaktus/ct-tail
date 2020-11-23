@@ -20,39 +20,31 @@ var staticPage = `<html>
         }
 
         function showEntry(entry) {
-            let line = ""
-            for (let name of entry.identifiers.dns_names) {
-                line += name
-            }
+            let line = entry.identifiers.dns_names.filter(function (val) {return val;}).join(' ')
             printLine(line)
         }
 
 		window.onload = function runLog() {
-            printLine("CT Log tailing started. DNS names for new log entries will appear below.")
+            ws = new WebSocket("wss://nogoegst.net/ct-tail/log/ws");
+            ws.onopen = function(evt) {
+                printLine("CT Log tailing started. DNS names for new log entries will appear below.")
+            }
+            ws.onclose = function(evt) {
+                printLine("Stream ended.")
+                return;
+            }
 
-            var url = "log"
-            fetch(url).then(function (response) {
-                let reader = response.body.getReader();
-                let decoder = new TextDecoder();
-                return readData();
-                function readData() {
-                    return reader.read().then(function ({value, done}) {
-                        let newData = decoder.decode(value, {stream: !done});
-                        jsons = newData.split("\n")
-                        for (let json of jsons) {
-                            if (json != "") {
-                                entry = JSON.parse(json)
-                                showEntry(entry)
-                            }
-                        }
-                        if (done) {
-                            printLine("Stream ended.")
-                            return;
-                        }
-                        return readData();
-                    });
+            ws.onerror = function(evt) {
+                printLine("Stream ended due to error.")
+                return;
+            }
+
+            ws.onmessage = function(evt) {
+                if (evt.data != "") {
+                    entry = JSON.parse(evt.data)
+                    showEntry(entry)
                 }
-            });
+            }
         }
 	</script>
 </head>
