@@ -17,7 +17,12 @@ import (
 // Catch the ones being issued by LE, thus expiring in 3 months
 func currentOak() string {
 	year := time.Now().AddDate(0, 3, 0).Year()
-	return fmt.Sprintf("https://oak.ct.letsencrypt.org/%d/", year)
+	yearHalf := 1
+	if time.Now().After(time.Date(year, 6, 20, 0, 0, 0, 0, time.UTC)) {
+		yearHalf = 2
+	}
+	name := fmt.Sprintf("%dh%d", year, yearHalf)
+	return fmt.Sprintf("https://oak.ct.letsencrypt.org/%s/", name)
 }
 
 type LockableEntries struct {

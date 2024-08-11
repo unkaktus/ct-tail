@@ -1,6 +1,7 @@
 package cttail
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -23,7 +24,8 @@ func NewTailer(logURL string, bygone uint64) *Tailer {
 }
 
 func (t *Tailer) FetchTip() ([]*Entry, error) {
-	sth, err := t.client.GetSTH()
+	ctx := context.Background()
+	sth, err := t.client.GetSTH(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get STH: %w", err)
 	}
@@ -36,7 +38,7 @@ func (t *Tailer) FetchTip() ([]*Entry, error) {
 		return nil, nil
 	}
 
-	entries, err := t.client.GetEntries(int64(t.tip), int64(sth.TreeSize))
+	entries, err := t.client.GetEntries(ctx, int64(t.tip), int64(sth.TreeSize))
 	if err != nil {
 		return nil, fmt.Errorf("get entries: %w", err)
 	}
